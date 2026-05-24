@@ -1,7 +1,7 @@
 # How HttpRequest travels from wsgi to view to client in Django
 
 - **Name: Syed Abdullah Al Muyeed**
-- **ID: FT-0061I**
+- **ID: FT0061-I**
 - **Designation: Information Technology Intern**
 
 ---
