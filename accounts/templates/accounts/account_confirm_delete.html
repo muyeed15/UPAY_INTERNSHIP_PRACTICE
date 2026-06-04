@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><title>Confirm Delete</title></head>
+<body>
+  <h1>Delete {{ object.account_number }}?</h1>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Yes, delete</button>
+  </form>
+  <a href="{% url 'account-list' %}">Cancel</a>
+</body>
+</html>
+

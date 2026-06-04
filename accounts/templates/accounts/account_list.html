@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head><title>Accounts</title></head>
+<body>
+  <h1>Accounts</h1>
+  <ul>
+    {% for account in accounts %}
+      <li>{{ account.account_number }} - ${{ account.balance }}</li>
+    {% empty %}
+      <li>No accounts yet.</li>
+    {% endfor %}
+  </ul>
+  <a href="{% url 'account-create' %}">Create New</a>
+</body>
+</html>
