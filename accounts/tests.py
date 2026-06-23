@@ -225,3 +225,57 @@ class AccountBulkSerializerTests(TestCase):
         accounts = serializer.save()
         self.assertEqual(len(accounts), 2)
         self.assertEqual(Account.objects.count(), 2)
+
+
+class BrokenSerializerTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user("fixer", "fixer@test.com", "pass")
+
+    def test_01_wrong_field_name(self):
+        data = {
+            "user_id": self.user.id,
+            "acct_number": "ACC001",
+            "card_number": "1111222233334444",
+            "balance": 100.00,
+            "is_frozen": False,
+        }
+        serializer = AccountBaseSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+
+    def test_02_wrong_computed_value(self):
+        account = Account.objects.create(
+            user=self.user, account_number="BRK001",
+            card_number="1111222233334444", balance=Decimal("500.00"),
+        )
+        Transaction.objects.create(
+            account=account, amount=Decimal("100.00"), type="credit",
+        )
+        serializer = AccountStatementSerializer(account)
+        self.assertEqual(serializer.data["transaction_count"], 5)
+
+    def test_03_missing_nested_field_asserts_valid(self):
+        data = {
+            "type": "credit",
+            "amount": "300.00",
+            "account": {
+                "user_id": self.user.id,
+            },
+        }
+        serializer = TransactionNestedWriteSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+
+    def test_04_wrong_moneyfield_conversion(self):
+        field = MoneyField()
+        result = field.to_representation(Decimal("100.00"))
+        self.assertEqual(result, float(100 * Decimal("50")))
+
+    def test_05_wrong_nested_key(self):
+        account = Account.objects.create(
+            user=self.user, account_number="BRK002",
+            card_number="1111222233334444", balance=Decimal("100.00"),
+        )
+        transaction = Transaction.objects.create(
+            account=account, amount=Decimal("25.00"), type="debit",
+        )
+        serializer = TransactionDetailSerializer(transaction)
+        self.assertIn("account_details", serializer.data)
