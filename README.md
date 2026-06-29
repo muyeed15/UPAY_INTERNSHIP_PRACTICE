@@ -39,12 +39,12 @@ Start server: `python manage.py runserver`
 
 ### 1. Register
 
-POST `/api/register/` with body `{"email":"muyeed@email.com","password":"pass1234"}`
+POST `/api/register/` with body `{"email":"muyeed@email.com","password":"muyeed123"}`
 ![Register](screenshots/01-register.png)
 
 ### 2. Login
 
-POST `/api/login/` with body `{"email":"muyeed@email.com","password":"pass1234"}`
+POST `/api/login/` with body `{"email":"muyeed@email.com","password":"muyeed123"}`
 ![Login](screenshots/02-login.png)
 
 ### 3. JWT Claims
@@ -84,7 +84,7 @@ POST `/api/logout/` with body `{"refresh":"<token>"}` plus auth header
 
 ### 10. DRF TokenAuth
 
-POST `/api/token-auth/` with body `{"email":"muyeed@email.com","password":"pass1234"}`
+POST `/api/token-auth/` with body `{"email":"muyeed@email.com","password":"muyeed123"}`
 ![DRF TokenAuth](screenshots/10-token-auth.png)
 
 ### 11. JWT vs TokenAuth
