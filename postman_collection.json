@@ -1,0 +1,119 @@
+{
+  "info": {
+    "name": "Django RBAC Permissions",
+    "description": "Pre-configured requests for testing the Django RBAC + Object-Level Permission system. Set base_url variable to http://localhost:8000 before use.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "base_url", "value": "http://localhost:8000", "type": "string"},
+    {"key": "admin_token", "value": "", "type": "string"},
+    {"key": "agent_token", "value": "", "type": "string"},
+    {"key": "bob_token", "value": "", "type": "string"},
+    {"key": "alice_token", "value": "", "type": "string"},
+    {"key": "eve_token", "value": "", "type": "string"}
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Login - admin_user",
+          "event": [{"listen": "test", "script": {"exec": ["var data = JSON.parse(responseBody);", "pm.collectionVariables.set('admin_token', data.access);"], "type": "text/javascript"}}],
+          "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"username\":\"admin_user\",\"password\":\"pass1234\"}"}, "url": {"raw": "{{base_url}}/api/token/", "host": ["{{base_url}}"], "path": ["api", "token", ""]}}
+        },
+        {
+          "name": "Login - agent_jane",
+          "event": [{"listen": "test", "script": {"exec": ["var data = JSON.parse(responseBody);", "pm.collectionVariables.set('agent_token', data.access);"], "type": "text/javascript"}}],
+          "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"username\":\"agent_jane\",\"password\":\"pass1234\"}"}, "url": {"raw": "{{base_url}}/api/token/", "host": ["{{base_url}}"], "path": ["api", "token", ""]}}
+        },
+        {
+          "name": "Login - customer_bob",
+          "event": [{"listen": "test", "script": {"exec": ["var data = JSON.parse(responseBody);", "pm.collectionVariables.set('bob_token', data.access);"], "type": "text/javascript"}}],
+          "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"username\":\"customer_bob\",\"password\":\"pass1234\"}"}, "url": {"raw": "{{base_url}}/api/token/", "host": ["{{base_url}}"], "path": ["api", "token", ""]}}
+        },
+        {
+          "name": "Login - customer_alice",
+          "event": [{"listen": "test", "script": {"exec": ["var data = JSON.parse(responseBody);", "pm.collectionVariables.set('alice_token', data.access);"], "type": "text/javascript"}}],
+          "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"username\":\"customer_alice\",\"password\":\"pass1234\"}"}, "url": {"raw": "{{base_url}}/api/token/", "host": ["{{base_url}}"], "path": ["api", "token", ""]}}
+        },
+        {
+          "name": "Login - unverified_eve",
+          "event": [{"listen": "test", "script": {"exec": ["var data = JSON.parse(responseBody);", "pm.collectionVariables.set('eve_token', data.access);"], "type": "text/javascript"}}],
+          "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"username\":\"unverified_eve\",\"password\":\"pass1234\"}"}, "url": {"raw": "{{base_url}}/api/token/", "host": ["{{base_url}}"], "path": ["api", "token", ""]}}
+        },
+        {
+          "name": "Login - banned_user (expect 401)",
+          "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"username\":\"banned_user\",\"password\":\"pass1234\"}"}, "url": {"raw": "{{base_url}}/api/token/", "host": ["{{base_url}}"], "path": ["api", "token", ""]}}
+        },
+        {
+          "name": "Register new user",
+          "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"username\":\"new_user\",\"email\":\"new@test.com\",\"password\":\"TestP4ss!\",\"password2\":\"TestP4ss!\"}"}, "url": {"raw": "{{base_url}}/api/accounts/register/", "host": ["{{base_url}}"], "path": ["api", "accounts", "register", ""]}}
+        }
+      ]
+    },
+    {
+      "name": "2. Account",
+      "item": [
+        {"name": "Profile - Bob", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{bob_token}}"}], "url": {"raw": "{{base_url}}/api/accounts/profile/", "host": ["{{base_url}}"], "path": ["api", "accounts", "profile", ""]}}},
+        {"name": "Profile - No Auth (expect 401)", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/accounts/profile/", "host": ["{{base_url}}"], "path": ["api", "accounts", "profile", ""]}}},
+        {"name": "Users - Bob (expect 403)", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{bob_token}}"}], "url": {"raw": "{{base_url}}/api/accounts/users/", "host": ["{{base_url}}"], "path": ["api", "accounts", "users", ""]}}}
+      ]
+    },
+    {
+      "name": "3. RBAC Demo",
+      "item": [
+        {"name": "[Admin] /demo/admin-role/ -- 200", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/demo/admin-role/", "host": ["{{base_url}}"], "path": ["api", "transactions", "demo", "admin-role", ""]}}},
+        {"name": "[Agent] /demo/admin-role/ -- 403", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{agent_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/demo/admin-role/", "host": ["{{base_url}}"], "path": ["api", "transactions", "demo", "admin-role", ""]}}},
+        {"name": "[Customer] /demo/admin-role/ -- 403", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{bob_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/demo/admin-role/", "host": ["{{base_url}}"], "path": ["api", "transactions", "demo", "admin-role", ""]}}},
+        {"name": "[Agent] /demo/agent-role/ -- 200", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{agent_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/demo/agent-role/", "host": ["{{base_url}}"], "path": ["api", "transactions", "demo", "agent-role", ""]}}},
+        {"name": "[Customer] /demo/customer-role/ -- 200", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{bob_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/demo/customer-role/", "host": ["{{base_url}}"], "path": ["api", "transactions", "demo", "customer-role", ""]}}},
+        {"name": "[Admin+Agent] /demo/admin-or-agent/ -- 200", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{agent_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/demo/admin-or-agent/", "host": ["{{base_url}}"], "path": ["api", "transactions", "demo", "admin-or-agent", ""]}}},
+        {"name": "[Customer] /demo/admin-or-agent/ -- 403", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{bob_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/demo/admin-or-agent/", "host": ["{{base_url}}"], "path": ["api", "transactions", "demo", "admin-or-agent", ""]}}}
+      ]
+    },
+    {
+      "name": "4. AND/OR Combinators",
+      "item": [
+        {"name": "[Verified] OR(IsAdmin,IsVerifiedUser) -- 200", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{bob_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/demo/admin-or-verified/", "host": ["{{base_url}}"], "path": ["api", "transactions", "demo", "admin-or-verified", ""]}}},
+        {"name": "[Unverified] OR(IsAdmin,IsVerifiedUser) -- 403", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{eve_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/demo/admin-or-verified/", "host": ["{{base_url}}"], "path": ["api", "transactions", "demo", "admin-or-verified", ""]}}},
+        {"name": "[Verified+Active] AND -- 200", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{bob_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/demo/verified-and-active/", "host": ["{{base_url}}"], "path": ["api", "transactions", "demo", "verified-and-active", ""]}}},
+        {"name": "[Unverified] AND -- 403", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{eve_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/demo/verified-and-active/", "host": ["{{base_url}}"], "path": ["api", "transactions", "demo", "verified-and-active", ""]}}}
+      ]
+    },
+    {
+      "name": "5. Object-Level Security",
+      "item": [
+        {"name": "[Bob] GET own txn #1 -- 200", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{bob_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/1/", "host": ["{{base_url}}"], "path": ["api", "transactions", "1", ""]}}},
+        {"name": "[Bob] GET Alice txn #3 -- 403", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{bob_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/3/", "host": ["{{base_url}}"], "path": ["api", "transactions", "3", ""]}}},
+        {"name": "[Bob] PUT own txn #1 -- 200", "request": {"method": "PUT", "header": [{"key": "Authorization", "value": "Bearer {{bob_token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"amount\":\"160.00\",\"description\":\"Updated via Postman\"}"}, "url": {"raw": "{{base_url}}/api/transactions/1/", "host": ["{{base_url}}"], "path": ["api", "transactions", "1", ""]}}},
+        {"name": "[Bob] PUT Alice txn #3 -- 403", "request": {"method": "PUT", "header": [{"key": "Authorization", "value": "Bearer {{bob_token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"amount\":\"999.99\",\"description\":\"HACK ATTEMPT\"}"}, "url": {"raw": "{{base_url}}/api/transactions/3/", "host": ["{{base_url}}"], "path": ["api", "transactions", "3", ""]}}}
+      ]
+    },
+    {
+      "name": "6. Agent Read-Only",
+      "item": [
+        {"name": "[Agent] List all transactions -- 200", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{agent_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/", "host": ["{{base_url}}"], "path": ["api", "transactions", ""]}}},
+        {"name": "[Agent] GET any transaction -- 200", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{agent_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/3/", "host": ["{{base_url}}"], "path": ["api", "transactions", "3", ""]}}},
+        {"name": "[Agent] PUT transaction -- 403", "request": {"method": "PUT", "header": [{"key": "Authorization", "value": "Bearer {{agent_token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"description\":\"Agent cannot write\"}"}, "url": {"raw": "{{base_url}}/api/transactions/1/", "host": ["{{base_url}}"], "path": ["api", "transactions", "1", ""]}}},
+        {"name": "[Agent] DELETE transaction -- 403", "request": {"method": "DELETE", "header": [{"key": "Authorization", "value": "Bearer {{agent_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/1/", "host": ["{{base_url}}"], "path": ["api", "transactions", "1", ""]}}},
+        {"name": "[Agent] POST create -- 403", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{agent_token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"amount\":\"50.00\",\"description\":\"Agent create\"}"}, "url": {"raw": "{{base_url}}/api/transactions/", "host": ["{{base_url}}"], "path": ["api", "transactions", ""]}}}
+      ]
+    },
+    {
+      "name": "7. Admin Full Access",
+      "item": [
+        {"name": "[Admin] List all -- 200", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}], "url": {"raw": "{{base_url}}/api/transactions/", "host": ["{{base_url}}"], "path": ["api", "transactions", ""]}}},
+        {"name": "[Admin] PATCH any transaction -- 200", "request": {"method": "PATCH", "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"status\":\"pending\"}"}, "url": {"raw": "{{base_url}}/api/transactions/3/", "host": ["{{base_url}}"], "path": ["api", "transactions", "3", ""]}}}
+      ]
+    },
+    {
+      "name": "8. Attack Vectors",
+      "item": [
+        {"name": "User ID Injection (Bob POST with user_id=4)", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{bob_token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"amount\":\"1.00\",\"description\":\"Injection attempt\",\"user_id\":4}"}, "url": {"raw": "{{base_url}}/api/transactions/", "host": ["{{base_url}}"], "path": ["api", "transactions", ""]}}},
+        {"name": "Unverified Create (Eve) -- 403", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{eve_token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"amount\":\"10.00\",\"description\":\"Should fail\"}"}, "url": {"raw": "{{base_url}}/api/transactions/", "host": ["{{base_url}}"], "path": ["api", "transactions", ""]}}},
+        {"name": "No Token -- 401", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/transactions/", "host": ["{{base_url}}"], "path": ["api", "transactions", ""]}}},
+        {"name": "Bad Token -- 401", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer invalid.jwt.token"}], "url": {"raw": "{{base_url}}/api/transactions/", "host": ["{{base_url}}"], "path": ["api", "transactions", ""]}}}
+      ]
+    }
+  ]
+}
